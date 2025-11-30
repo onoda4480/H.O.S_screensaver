@@ -107,11 +107,28 @@ fn run_screensaver(fullscreen: bool) {
     let mut rng = rand::thread_rng();
     let mut last_add = Instant::now();
 
+    // マウス位置の初期化（終了判定用）
+    let initial_mouse_pos = window.get_mouse_pos(minifb::MouseMode::Clamp).unwrap_or((0.0, 0.0));
+    let mut last_mouse_pos = initial_mouse_pos;
+
+    // 起動直後のキーイベントを無視するための待機時間
+    let start_time = Instant::now();
+    let grace_period = Duration::from_millis(500); // 500ms の猶予期間
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let now = Instant::now();
 
-        // フルスクリーンモードでは、マウス移動やキー入力で終了
-        if fullscreen {
+        // フルスクリーンモードでは、マウス移動やキー入力で終了（起動後の猶予期間を過ぎてから）
+        if fullscreen && now.duration_since(start_time) > grace_period {
+            // マウスが動いたら終了
+            if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
+                let dx = (x - last_mouse_pos.0).abs();
+                let dy = (y - last_mouse_pos.1).abs();
+                if dx > 5.0 || dy > 5.0 {
+                    break;
+                }
+            }
+
             // 何かキーが押されたら終了
             if !window.get_keys().is_empty() {
                 break;
@@ -147,7 +164,7 @@ fn run_screensaver(fullscreen: bool) {
                 text.x,
                 text.y,
                 BABEL_TEXT,
-                0xFF0000, // 赤色 (RGB)
+                0x00FF0000, // 赤色 (ARGB: Alpha=0, Red=255, Green=0, Blue=0)
             );
         }
 
