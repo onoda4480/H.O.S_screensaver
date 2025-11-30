@@ -75,7 +75,7 @@ fn run_screensaver(fullscreen: bool) {
     window_options.topmost = true;    // 最前面に配置
 
     let mut window = Window::new(
-        "H.O.S BABEL Screensaver",
+        "", // 空文字列でタイトルバーを非表示にする
         width,
         height,
         window_options,
