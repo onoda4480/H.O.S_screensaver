@@ -71,6 +71,8 @@ fn run_screensaver(fullscreen: bool) {
     let mut window_options = WindowOptions::default();
     window_options.borderless = true; // 常にボーダーレス（枠なし）
     window_options.resize = false;    // リサイズ不可
+    window_options.title = false;     // タイトルバーを非表示
+    window_options.topmost = true;    // 最前面に配置
 
     let mut window = Window::new(
         "H.O.S BABEL Screensaver",
