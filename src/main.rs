@@ -1,5 +1,4 @@
 use minifb::{Key, Window, WindowOptions};
-use rand::Rng;
 use std::time::{Duration, Instant};
 
 #[cfg(target_os = "windows")]
@@ -27,9 +26,7 @@ enum ScreensaverMode {
     Configure, // /c - 設定ダイアログ
 }
 
-struct BabelText {
-    x: i32,
-    y: i32,
+struct BabelLine {
     lifetime: Instant,
 }
 
@@ -103,8 +100,7 @@ fn run_screensaver(fullscreen: bool) {
     window.set_target_fps(60);
 
     let mut buffer: Vec<u32> = vec![0; width * height];
-    let mut babel_texts: Vec<BabelText> = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut babel_lines: Vec<BabelLine> = Vec::new();
     let mut last_add = Instant::now();
 
     // マウス位置の初期化（終了判定用）
@@ -114,6 +110,10 @@ fn run_screensaver(fullscreen: bool) {
     // 起動直後のキーイベントを無視するための待機時間
     let start_time = Instant::now();
     let grace_period = Duration::from_millis(500); // 500ms の猶予期間
+
+    // 1行の高さ（フォント高さ + FONT_THICKNESS による拡大）
+    let line_height = FONT_HEIGHT * FONT_THICKNESS;
+    let max_rows = height / line_height;
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let now = Instant::now();
@@ -135,41 +135,57 @@ fn run_screensaver(fullscreen: bool) {
             }
         }
 
-        // 100msごとに新しいBABELテキストを追加
-        if now.duration_since(last_add) > Duration::from_millis(10) {
-            let x = rng.gen_range(0..(width as i32 - (BABEL_TEXT.len() * FONT_WIDTH) as i32));
-            let y = rng.gen_range(0..(height as i32 - FONT_HEIGHT as i32));
-
-            babel_texts.push(BabelText {
-                x,
-                y,
+        // 1秒ごとに新しい行を追加
+        if now.duration_since(last_add) > Duration::from_secs(1) {
+            babel_lines.push(BabelLine {
                 lifetime: now,
             });
 
             last_add = now;
         }
 
-        // 古いテキストを削除（5秒経過したもの）
-        babel_texts.retain(|text| now.duration_since(text.lifetime) < Duration::from_secs(100));
+        // 古い行を削除（100秒経過したもの）
+        babel_lines.retain(|line| now.duration_since(line.lifetime) < Duration::from_secs(100));
 
         // 画面を黒でクリア
         buffer.fill(0);
 
-        // すべてのBABELテキストを描画
-        for text in &babel_texts {
-            draw_text(
-                &mut buffer,
-                width,
-                height,
-                text.x,
-                text.y,
-                BABEL_TEXT,
-                0x00FF0000, // 赤色 (ARGB: Alpha=0, Red=255, Green=0, Blue=0)
-            );
+        // すべての行を描画（下から上に向かって）
+        // i=0 (最も古い行) を上に、i=n (最新の行) を下に配置
+        for (i, _line) in babel_lines.iter().enumerate() {
+            // 下から i 行目に配置
+            let row_from_bottom = babel_lines.len() - 1 - i;
+            if row_from_bottom < max_rows {
+                let row = max_rows - 1 - row_from_bottom;
+                draw_line(&mut buffer, width, height, row, line_height);
+            }
         }
 
         // バッファを更新
         window.update_with_buffer(&buffer, width, height).unwrap();
+    }
+}
+
+// 1行全体に "BABEL " を繰り返し描画
+fn draw_line(buffer: &mut [u32], width: usize, height: usize, row: usize, line_height: usize) {
+    let y = (row * line_height) as i32;
+
+    // "BABEL " 1つ分の幅（文字数 × フォント幅 × 太さ）
+    let babel_width = BABEL_TEXT.len() * FONT_WIDTH * FONT_THICKNESS;
+
+    // 画面幅いっぱいに "BABEL " を繰り返し描画
+    let mut x = 0;
+    while x < width {
+        draw_text(
+            buffer,
+            width,
+            height,
+            x as i32,
+            y,
+            BABEL_TEXT,
+            0x00FF0000, // 赤色
+        );
+        x += babel_width;
     }
 }
 
@@ -184,7 +200,7 @@ fn draw_text(
     color: u32,
 ) {
     for (i, ch) in text.chars().enumerate() {
-        let char_x = x + (i as i32 * FONT_WIDTH as i32);
+        let char_x = x + (i as i32 * (FONT_WIDTH * FONT_THICKNESS) as i32);
         draw_char(buffer, width, height, char_x, y, ch, color);
     }
 }
