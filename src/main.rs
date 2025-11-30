@@ -8,7 +8,7 @@ use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 #[cfg(target_os = "windows")]
 use windows::Win32::UI::WindowsAndMessaging::{
     GetSystemMetrics, SetWindowLongPtrW, SetWindowPos, GWL_STYLE, GWL_EXSTYLE,
-    SWP_FRAMECHANGED, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, WINDOW_EX_STYLE, WINDOW_STYLE,
+    SWP_FRAMECHANGED, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
     WS_POPUP, WS_VISIBLE, WS_EX_TOPMOST, SM_CXSCREEN, SM_CYSCREEN,
 };
 
@@ -262,7 +262,7 @@ fn remove_window_titlebar(window: &Window) {
         // ウィンドウハンドルを取得
         if let Ok(handle) = window.window_handle() {
             if let RawWindowHandle::Win32(win32_handle) = handle.as_raw() {
-                let hwnd = HWND(win32_handle.hwnd.get() as isize);
+                let hwnd = HWND(win32_handle.hwnd.get() as *mut core::ffi::c_void);
 
                 // WS_POPUP スタイルに変更（タイトルバーなし）
                 SetWindowLongPtrW(hwnd, GWL_STYLE, (WS_POPUP | WS_VISIBLE).0 as isize);
@@ -273,7 +273,7 @@ fn remove_window_titlebar(window: &Window) {
                 // 変更を適用
                 let _ = SetWindowPos(
                     hwnd,
-                    HWND(0),
+                    HWND(std::ptr::null_mut()),
                     0,
                     0,
                     0,
