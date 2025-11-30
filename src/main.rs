@@ -97,7 +97,7 @@ fn run_screensaver(fullscreen: bool) {
     remove_window_titlebar(&window);
 
     // フレームレートを設定
-    window.set_target_fps(4);
+    window.set_target_fps(6);
 
     let mut buffer: Vec<u32> = vec![0; width * height];
     let mut babel_lines: Vec<BabelLine> = Vec::new();
@@ -109,7 +109,7 @@ fn run_screensaver(fullscreen: bool) {
 
     // 起動直後のキーイベントを無視するための待機時間
     let start_time = Instant::now();
-    let grace_period = Duration::from_millis(10); // 500ms の猶予期間
+    let grace_period = Duration::from_millis(500); // 500ms の猶予期間
 
     // 1行の高さ（フォント高さ + FONT_THICKNESS による拡大）
     let line_height = FONT_HEIGHT * FONT_THICKNESS;
@@ -149,7 +149,7 @@ fn run_screensaver(fullscreen: bool) {
 
         // スクロールアニメーション用のオフセットを計算
         // 次の行が追加されるまでの進行度（0.0 ~ 1.0）
-        let time_since_last_add = now.duration_since(last_add).as_millis() as f32 / 1000.0;
+        let time_since_last_add = now.duration_since(last_add).as_millis() as f32 / 2000.0;
         let scroll_offset = (time_since_last_add * line_height as f32) as i32;
 
         // 画面を黒でクリア
