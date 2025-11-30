@@ -99,7 +99,7 @@ fn run_screensaver(fullscreen: bool) {
         }
 
         // 100msごとに新しいBABELテキストを追加
-        if now.duration_since(last_add) > Duration::from_millis(50) {
+        if now.duration_since(last_add) > Duration::from_millis(10) {
             let x = rng.gen_range(0..(width as i32 - (BABEL_TEXT.len() * FONT_WIDTH) as i32));
             let y = rng.gen_range(0..(height as i32 - FONT_HEIGHT as i32));
 
@@ -113,7 +113,7 @@ fn run_screensaver(fullscreen: bool) {
         }
 
         // 古いテキストを削除（5秒経過したもの）
-        babel_texts.retain(|text| now.duration_since(text.lifetime) < Duration::from_secs(60));
+        babel_texts.retain(|text| now.duration_since(text.lifetime) < Duration::from_secs(100));
 
         // 画面を黒でクリア
         buffer.fill(0);
