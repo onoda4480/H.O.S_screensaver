@@ -97,7 +97,7 @@ fn run_screensaver(fullscreen: bool) {
     remove_window_titlebar(&window);
 
     // フレームレートを設定
-    window.set_target_fps(60);
+    window.set_target_fps(4);
 
     let mut buffer: Vec<u32> = vec![0; width * height];
     let mut babel_lines: Vec<BabelLine> = Vec::new();
@@ -109,7 +109,7 @@ fn run_screensaver(fullscreen: bool) {
 
     // 起動直後のキーイベントを無視するための待機時間
     let start_time = Instant::now();
-    let grace_period = Duration::from_millis(500); // 500ms の猶予期間
+    let grace_period = Duration::from_millis(10); // 500ms の猶予期間
 
     // 1行の高さ（フォント高さ + FONT_THICKNESS による拡大）
     let line_height = FONT_HEIGHT * FONT_THICKNESS;
