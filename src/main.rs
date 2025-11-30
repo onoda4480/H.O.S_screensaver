@@ -115,7 +115,7 @@ fn run_screensaver(fullscreen: bool) {
         }
 
         // 古いテキストを削除（5秒経過したもの）
-        babel_texts.retain(|text| now.duration_since(text.lifetime) < Duration::from_secs(5));
+        babel_texts.retain(|text| now.duration_since(text.lifetime) < Duration::from_secs(60));
 
         // 画面を黒でクリア
         buffer.fill(0);
