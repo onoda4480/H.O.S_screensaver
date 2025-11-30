@@ -66,10 +66,8 @@ fn run_screensaver(fullscreen: bool) {
     };
 
     let mut window_options = WindowOptions::default();
-    if fullscreen {
-        window_options.borderless = true;
-        window_options.resize = false;
-    }
+    window_options.borderless = true; // 常にボーダーレス（枠なし）
+    window_options.resize = false;    // リサイズ不可
 
     let mut window = Window::new(
         "H.O.S BABEL Screensaver",
@@ -101,7 +99,7 @@ fn run_screensaver(fullscreen: bool) {
         }
 
         // 100msごとに新しいBABELテキストを追加
-        if now.duration_since(last_add) > Duration::from_millis(100) {
+        if now.duration_since(last_add) > Duration::from_millis(50) {
             let x = rng.gen_range(0..(width as i32 - (BABEL_TEXT.len() * FONT_WIDTH) as i32));
             let y = rng.gen_range(0..(height as i32 - FONT_HEIGHT as i32));
 
