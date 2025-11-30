@@ -3,7 +3,17 @@ use rand::Rng;
 use std::time::{Duration, Instant};
 
 #[cfg(target_os = "windows")]
-use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN};
+use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+
+#[cfg(target_os = "windows")]
+use windows::Win32::UI::WindowsAndMessaging::{
+    GetSystemMetrics, SetWindowLongPtrW, SetWindowPos, GWL_STYLE, GWL_EXSTYLE,
+    SWP_FRAMECHANGED, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, WINDOW_EX_STYLE, WINDOW_STYLE,
+    WS_POPUP, WS_VISIBLE, WS_EX_TOPMOST, SM_CXSCREEN, SM_CYSCREEN,
+};
+
+#[cfg(target_os = "windows")]
+use windows::Win32::Foundation::HWND;
 
 const BABEL_TEXT: &str = "BABEL ";
 const FONT_WIDTH: usize = 8;
@@ -84,6 +94,10 @@ fn run_screensaver(fullscreen: bool) {
     .unwrap_or_else(|e| {
         panic!("Unable to create window {}", e);
     });
+
+    // Windows でタイトルバーを完全に削除
+    #[cfg(target_os = "windows")]
+    remove_window_titlebar(&window);
 
     // フレームレートを設定
     window.set_target_fps(60);
@@ -239,4 +253,34 @@ fn get_screen_size() -> (usize, usize) {
 fn get_screen_size() -> (usize, usize) {
     // macOS や Linux での開発時のデフォルト値
     (1920, 1080)
+}
+
+// Windows でタイトルバーを完全に削除する
+#[cfg(target_os = "windows")]
+fn remove_window_titlebar(window: &Window) {
+    unsafe {
+        // ウィンドウハンドルを取得
+        if let Ok(handle) = window.window_handle() {
+            if let RawWindowHandle::Win32(win32_handle) = handle.as_raw() {
+                let hwnd = HWND(win32_handle.hwnd.get() as isize);
+
+                // WS_POPUP スタイルに変更（タイトルバーなし）
+                SetWindowLongPtrW(hwnd, GWL_STYLE, (WS_POPUP | WS_VISIBLE).0 as isize);
+
+                // WS_EX_TOPMOST スタイルを設定（最前面）
+                SetWindowLongPtrW(hwnd, GWL_EXSTYLE, WS_EX_TOPMOST.0 as isize);
+
+                // 変更を適用
+                let _ = SetWindowPos(
+                    hwnd,
+                    HWND(0),
+                    0,
+                    0,
+                    0,
+                    0,
+                    SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER,
+                );
+            }
+        }
+    }
 }

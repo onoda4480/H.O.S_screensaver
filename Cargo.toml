@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 minifb = "0.27"
 rand = "0.8"
+raw-window-handle = "0.6"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = [
