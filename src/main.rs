@@ -3,7 +3,7 @@ use rand::Rng;
 use std::time::{Duration, Instant};
 
 #[cfg(target_os = "windows")]
-use windows::Win32::Graphics::Gdi::{GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN};
+use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN};
 
 const BABEL_TEXT: &str = "BABEL ";
 const FONT_WIDTH: usize = 8;
