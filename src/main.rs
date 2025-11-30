@@ -2,6 +2,9 @@ use minifb::{Key, Window, WindowOptions};
 use rand::Rng;
 use std::time::{Duration, Instant};
 
+#[cfg(target_os = "windows")]
+use windows::Win32::Graphics::Gdi::{GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN};
+
 const BABEL_TEXT: &str = "BABEL ";
 const FONT_WIDTH: usize = 8;
 const FONT_HEIGHT: usize = 16;
@@ -57,10 +60,10 @@ fn parse_arguments(args: &[String]) -> ScreensaverMode {
 }
 
 fn run_screensaver(fullscreen: bool) {
-    // 画面サイズを取得（フルスクリーンの場合は実際の画面サイズを使用）
+    // 画面サイズを取得
     let (width, height) = if fullscreen {
-        // 実際の画面サイズを取得（簡易的に1920x1080を使用）
-        (1920, 1080)
+        // 実際のプライマリディスプレイサイズを取得
+        get_screen_size()
     } else {
         (800, 600)
     };
@@ -211,4 +214,21 @@ fn get_glyph(ch: char) -> [u8; 16] {
             0b00000000, 0b00000000,
         ],
     }
+}
+
+// プライマリディスプレイのサイズを取得
+#[cfg(target_os = "windows")]
+fn get_screen_size() -> (usize, usize) {
+    unsafe {
+        let width = GetSystemMetrics(SM_CXSCREEN);
+        let height = GetSystemMetrics(SM_CYSCREEN);
+        (width as usize, height as usize)
+    }
+}
+
+// Windows以外の環境ではデフォルト値を返す
+#[cfg(not(target_os = "windows"))]
+fn get_screen_size() -> (usize, usize) {
+    // macOS や Linux での開発時のデフォルト値
+    (1920, 1080)
 }
