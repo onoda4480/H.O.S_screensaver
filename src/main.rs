@@ -147,17 +147,27 @@ fn run_screensaver(fullscreen: bool) {
         // 古い行を削除（100秒経過したもの）
         babel_lines.retain(|line| now.duration_since(line.lifetime) < Duration::from_secs(100));
 
+        // スクロールアニメーション用のオフセットを計算
+        // 次の行が追加されるまでの進行度（0.0 ~ 1.0）
+        let time_since_last_add = now.duration_since(last_add).as_millis() as f32 / 1000.0;
+        let scroll_offset = (time_since_last_add * line_height as f32) as i32;
+
         // 画面を黒でクリア
         buffer.fill(0);
 
         // すべての行を描画（下から上に向かって）
-        // i=0 (最も古い行) を上に、i=n (最新の行) を下に配置
+        // スクロールオフセットを適用してスムーズにスクロール
         for (i, _line) in babel_lines.iter().enumerate() {
             // 下から i 行目に配置
             let row_from_bottom = babel_lines.len() - 1 - i;
             if row_from_bottom < max_rows {
-                let row = max_rows - 1 - row_from_bottom;
-                draw_line(&mut buffer, width, height, row, line_height);
+                let base_row = max_rows - 1 - row_from_bottom;
+                let y = (base_row * line_height) as i32 - scroll_offset;
+
+                // 画面内に表示される場合のみ描画
+                if y >= -(line_height as i32) && y < height as i32 {
+                    draw_line_at_y(&mut buffer, width, height, y, line_height);
+                }
             }
         }
 
@@ -166,10 +176,8 @@ fn run_screensaver(fullscreen: bool) {
     }
 }
 
-// 1行全体に "BABEL " を繰り返し描画
-fn draw_line(buffer: &mut [u32], width: usize, height: usize, row: usize, line_height: usize) {
-    let y = (row * line_height) as i32;
-
+// 1行全体に "BABEL " を繰り返し描画（Y座標を直接指定）
+fn draw_line_at_y(buffer: &mut [u32], width: usize, height: usize, y: i32, _line_height: usize) {
     // "BABEL " 1つ分の幅（文字数 × フォント幅 × 太さ）
     let babel_width = BABEL_TEXT.len() * FONT_WIDTH * FONT_THICKNESS;
 
