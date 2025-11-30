@@ -166,7 +166,9 @@ fn run_screensaver(fullscreen: bool) {
 
                 // 画面内に表示される場合のみ描画
                 if y >= -(line_height as i32) && y < height as i32 {
-                    draw_line_at_y(&mut buffer, width, height, y, line_height);
+                    // 行番号に応じて交互にオフセット（千鳥配置）
+                    let is_offset_row = base_row % 2 == 1;
+                    draw_line_at_y(&mut buffer, width, height, y, line_height, is_offset_row);
                 }
             }
         }
@@ -177,23 +179,30 @@ fn run_screensaver(fullscreen: bool) {
 }
 
 // 1行全体に "BABEL " を繰り返し描画（Y座標を直接指定）
-fn draw_line_at_y(buffer: &mut [u32], width: usize, height: usize, y: i32, _line_height: usize) {
+fn draw_line_at_y(buffer: &mut [u32], width: usize, height: usize, y: i32, _line_height: usize, is_offset_row: bool) {
     // "BABEL " 1つ分の幅（文字数 × フォント幅 × 太さ）
     let babel_width = BABEL_TEXT.len() * FONT_WIDTH * FONT_THICKNESS;
 
+    // 交互の行の場合、2文字分（"  "）右にオフセット
+    let x_offset = if is_offset_row {
+        (1 * FONT_WIDTH * FONT_THICKNESS) as i32  // 2スペース分
+    } else {
+        0
+    };
+
     // 画面幅いっぱいに "BABEL " を繰り返し描画
-    let mut x = 0;
-    while x < width {
+    let mut x = x_offset;
+    while x < width as i32 {
         draw_text(
             buffer,
             width,
             height,
-            x as i32,
+            x,
             y,
             BABEL_TEXT,
             0x00FF0000, // 赤色
         );
-        x += babel_width;
+        x += babel_width as i32;
     }
 }
 
