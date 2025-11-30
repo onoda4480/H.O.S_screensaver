@@ -8,6 +8,7 @@ use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSCREEN, SM_
 const BABEL_TEXT: &str = "BABEL ";
 const FONT_WIDTH: usize = 8;
 const FONT_HEIGHT: usize = 16;
+const FONT_THICKNESS: usize = 2; // 文字の太さ (1=通常, 2=太字, 3=極太)
 
 #[derive(Debug)]
 enum ScreensaverMode {
@@ -172,13 +173,18 @@ fn draw_char(
     for (row, &bits) in glyph.iter().enumerate() {
         for col in 0..8 {
             if (bits >> (7 - col)) & 1 == 1 {
-                let px = x + col;
-                let py = y + row as i32;
+                // FONT_THICKNESS に応じて複数のピクセルを描画
+                for dy in 0..FONT_THICKNESS {
+                    for dx in 0..FONT_THICKNESS {
+                        let px = x + col + dx as i32;
+                        let py = y + row as i32 + dy as i32;
 
-                if px >= 0 && px < width as i32 && py >= 0 && py < height as i32 {
-                    let index = (py as usize * width + px as usize) as usize;
-                    if index < buffer.len() {
-                        buffer[index] = color;
+                        if px >= 0 && px < width as i32 && py >= 0 && py < height as i32 {
+                            let index = (py as usize * width + px as usize) as usize;
+                            if index < buffer.len() {
+                                buffer[index] = color;
+                            }
+                        }
                     }
                 }
             }
